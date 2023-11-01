@@ -1,13 +1,12 @@
-from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse, HttpRequest, Http404
-from .models import Post, Category
-import datetime
+from django.db.models.functions import Now
+from django.http import Http404, HttpRequest, HttpResponse
+from django.shortcuts import get_object_or_404, render
+
+from .models import Category, Post
 
 
-def index(request: HttpRequest) -> HttpResponse:
-    template_name: dict = 'blog/index.html'
-    utc_now = datetime.datetime.utcnow()
-    post_list = Post.objects.select_related(
+def post_list_request():
+    return Post.objects.select_related(
         'location', 'author', 'category'
     ).only(
         'id',
@@ -19,7 +18,13 @@ def index(request: HttpRequest) -> HttpResponse:
         'author__username',
         'category__slug',
         'category__title'
-    ).filter(
+    )
+
+
+def index(request: HttpRequest) -> HttpResponse:
+    template_name: dict = 'blog/index.html'
+    utc_now = Now()
+    post_list = post_list_request().filter(
         pub_date__lte=utc_now,
         is_published=True,
         category__is_published=True
@@ -32,21 +37,9 @@ def index(request: HttpRequest) -> HttpResponse:
 
 def post_detail(request: HttpRequest, post_id: int) -> HttpResponse:
     template_name: str = 'blog/detail.html'
-    utc_now = datetime.datetime.utcnow()
+    utc_now = Now()
     post = get_object_or_404(
-        Post.objects.select_related(
-            'location', 'author', 'category'
-        ).only(
-            'id',
-            'title',
-            'text',
-            'pub_date',
-            'location__is_published',
-            'location__name',
-            'author__username',
-            'category__slug',
-            'category__title'
-        ).filter(
+        post_list_request().filter(
             pub_date__lte=utc_now,
             is_published=True,
             category__is_published=True
@@ -73,20 +66,8 @@ def category_posts(request: HttpRequest, category_slug: str) -> HttpResponse:
     if not category['is_published']:
         raise Http404('Категория не опубликована')
 
-    utc_now = datetime.datetime.utcnow()
-    post_list = Post.objects.select_related(
-        'location', 'category', 'author'
-    ).only(
-        'id',
-        'title',
-        'text',
-        'pub_date',
-        'location__is_published',
-        'location__name',
-        'author__username',
-        'category__slug',
-        'category__title'
-    ).filter(
+    utc_now = Now()
+    post_list = post_list_request().filter(
         pub_date__lte=utc_now,
         is_published=True,
         category__slug=category_slug
