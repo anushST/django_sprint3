@@ -17,6 +17,7 @@ class BaseModel(models.Model):
 
 
 class Category(BaseModel):
+    # Не понял что нужно сделать.
     title = models.CharField('Заголовок', max_length=256)
     description = models.TextField('Описание')
     slug = models.SlugField(

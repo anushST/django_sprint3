@@ -28,7 +28,7 @@ def index(request: HttpRequest) -> HttpResponse:
         pub_date__lte=utc_now,
         is_published=True,
         category__is_published=True
-    ).order_by('-pub_date')[:5]
+    ).order_by('-pub_date')[:5]  # тут я не понял что надо изменить
     context: dict = {
         'post_list': post_list,
     }
@@ -55,15 +55,12 @@ def post_detail(request: HttpRequest, post_id: int) -> HttpResponse:
 def category_posts(request: HttpRequest, category_slug: str) -> HttpResponse:
     template_name: str = 'blog/category.html'
     category = get_object_or_404(
-        Category.objects.values(
-            'title',
-            'description',
-            'is_published'
-        ),
+        # Мне же не все объекты нужны, зачем мне всё вызывать
+        Category,
         slug=category_slug
     )
 
-    if not category['is_published']:
+    if not category.is_published:
         raise Http404('Категория не опубликована')
 
     utc_now = Now()
