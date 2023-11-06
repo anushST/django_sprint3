@@ -3,9 +3,9 @@
   Публикации в категории «{{ category.title }}»
 {% endblock %}
 {% block content %}
-<h1>Публикации в категории «{{ category.title }}»</h1>
-<p class="mb-5">{{ category.description }}</p>
-{% for post in post_list %}
-  {% include "includes/post_card.html" %} 
-{% endfor %}
+  <h1>Публикации в категории «{{ category.title }}»</h1>
+  <p class="mb-5">{{ category.description }}</p>
+  {% for post in post_list %}
+    {% include "includes/post_card.html" %} 
+  {% endfor %}
 {% endblock %}
