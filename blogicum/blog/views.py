@@ -6,8 +6,8 @@ from .constants import POSTS_LIMIT
 from .models import Category, Post
 
 
-def post_list_request():
-    return Post.objects.select_related(
+def post_list_request(manager=Post.objects):
+    return manager.select_related(
         'location', 'author', 'category'
     ).only(
         'id',
@@ -22,14 +22,13 @@ def post_list_request():
     ).filter(
         pub_date__lte=Now(),
         is_published=True,
+        category__is_published=True
     )
 
 
 def index(request: HttpRequest) -> HttpResponse:
     template_name: dict = 'blog/index.html'
-    post_list = post_list_request().filter(
-        category__is_published=True
-    ).order_by('-pub_date')[:POSTS_LIMIT]
+    post_list = post_list_request().order_by('-pub_date')[:POSTS_LIMIT]
     context: dict = {
         'post_list': post_list,
     }
@@ -39,9 +38,7 @@ def index(request: HttpRequest) -> HttpResponse:
 def post_detail(request: HttpRequest, post_id: int) -> HttpResponse:
     template_name: str = 'blog/detail.html'
     post = get_object_or_404(
-        post_list_request().filter(
-            category__is_published=True
-        ),
+        post_list_request(),
         pk=post_id
     )
     context: dict = {
@@ -53,19 +50,12 @@ def post_detail(request: HttpRequest, post_id: int) -> HttpResponse:
 def category_posts(request: HttpRequest, category_slug: str) -> HttpResponse:
     template_name: str = 'blog/category.html'
     category = get_object_or_404(
-        # Мне же не все объекты нужны, зачем мне всё вызывать
-        # ?
-        # ?
-        # ?
-        # ?
         Category,
         slug=category_slug,
         is_published=True
     )
 
-    post_list = post_list_request().filter(
-        category__slug=category.slug
-    )
+    post_list = post_list_request(category.post_set)
 
     context: dict = {
         'post_list': post_list,
